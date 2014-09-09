@@ -1,0 +1,32 @@
+{
+    "name": "thesisprototype",
+    "description": "thesis prototype nodejs app",
+    "version": "0.0.1",
+    "private": true,
+    "dependencies": {
+        "express": "3.2.6",
+        "config": "0.4.x",
+        "moment": "2.3.1",
+        "moment-timezone": "0.0.3",
+        "underscore": "1.4.4",
+        "underscore.string": "2.3.x",
+        "jade": "0.31.2",
+        "restify": "2.6.3",
+        "async": "0.2.9"
+    },
+    "scripts": {
+        "start": "node app.js"
+    },
+    "devDependencies": {
+        "mocha": "1.13.0",
+        "zombie":"1.4.1",
+        "sinon": "1.7.3",
+        "should": "1.2.2",
+        "xunit-file": "0.0.4",
+        "grunt-cli": "*",
+        "grunt-contrib-clean": "0.5.0",
+        "grunt-contrib-jshint": "0.8.0",
+        "grunt-mocha-istanbul": "*",
+        "grunt-exec": "~0.4.3"
+    }
+}
