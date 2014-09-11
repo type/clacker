@@ -1,18 +1,20 @@
-var xs = [];
-xs[0] = [90, 90, 60, 60, 30];
-xs[1] = [60, 90, 60, 60, 30];
-xs[2] = [90, 30, 60, 90, 30];
-var n = 3;
-var S = new Array(n);
-for (var i = 0; i < n; i++) {
-    S[i] = new Array(n);
-}
-for (var i = 0; i < n; i++) {
-    S[i][i] = vari(xs[i]);
-    for (var j = i + 1; j < n; j++) {
-        S[i][j] = cov(xs[i], xs[j]);
-        S[j][i] = S[i][j];
+/* Covariance functions */
+function createCovarianceMatrix(timingVectorMatrix) {
+    var transposed = transpose(timingVectorMatrix); // input matrix has columns as rows
+    var n = transposed.length,
+        S = new Array(n);
+    for (var i = 0; i < n; i++) {
+        // create n*n matrix from m*n input matrix (m = number rows, n = number of cols)
+        S[i] = new Array(n);
     }
+    for (var i = 0; i < n; i++) {
+        S[i][i] = vari(transposed[i]);
+        for (var j = i + 1; j < n; j++) {
+            S[i][j] = cov(transposed[i], transposed[j]);
+            S[j][i] = S[i][j]; // variance values are reflected across top left - bottom right diagonal
+        }
+    }
+    console.log(JSON.stringify(S));
 }
 
 function vari(vector) {
@@ -50,6 +52,9 @@ function cov(a, b) {
     return mean(values);
 }
 
+
+
+/* Mahalanobis distance functions */
 function transpose(mat) {
     return Object.keys(mat[0]).map(
         function (c) { return mat.map(function (r) { return r[c]; }); }

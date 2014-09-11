@@ -18,5 +18,5 @@ app.use(app.router);
 app.get('/index', require('./controllers/index.js'));
 
 app.listen(8001, function(){
-    console.log('listening');
+    console.log('listening on 8001');
 });

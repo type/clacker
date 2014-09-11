@@ -1,9 +1,11 @@
 $(document).ready(function() {
-    var words = [ "the", "bread"];
+    var keys = [],
+        dictionary = [ "the", "bread"],
+        maxWord = _.max(_.map(dictionary, function(w) {
+            return w.length;
+        }));
     
-    var keys = [];
-
-    words = _.map(words, function(word) {
+    dictionary = _.map(dictionary, function(word) {
         return {
             word: word, 
             regex: new RegExp(word, "i")
@@ -17,29 +19,50 @@ $(document).ready(function() {
 
     $('#blah').on('keyup', function(e) {
         keys[findNearest(keys, String.fromCharCode(e.keyCode))].uptime = e.timeStamp;
-        var wordObj = testWords(keys, words);
+        var wordObj = testWords(keys, dictionary);
         if (wordObj) {
-            // do covariance stuff
-            var vector = createTimingVector(findRelevantKeys(keys, wordObj));
             // now we need to find the relevant keystrokes in the keys array since more than what we need
             // may have been captured
-            console.log(vector);
-            keys = [];
+            var vector = createTimingVector(findRelevantKeys(keys, wordObj));
+            keys = _.last(keys, 2); // people press multiple keys at the same time while typing--can't fully clear array
+            
+            var storage = localStorage.getItem(wordObj.word);
+            storage = JSON.parse(storage) || [];
+
+            if (storage.length > 10) {
+                // We are safe to establish a covariance matrix
+                createCovarianceMatrix(storage);
+            }
+
+            else {
+
+                storage.push(vector)
+                localStorage.setItem(wordObj.word, JSON.stringify(storage));
+
+            }
+
+        }
+        else {
+            // we can safely truncate all but the last few characters--those must stay in case the user is
+            // presently typing the longest word in our dictionary
+            if (keys.length > 2 * maxWord) {
+                keys = _.last(keys, maxWord);
+            }
         }
     });
 
     function findNearest(keyArray, letter) {
         for (var i = keyArray.length - 1 ; i >= 0; i--) {
-            if (keyArray[i].letter === letter) {
+            if (keyArray[i].letter === letter && keyArray[i].uptime === null) {
                 return i;
             }
         }
     }
 
-    function testWords(keyArray, words) {
-        // find if any of our good words have been typed
+    function testWords(keyArray, dictionary) {
+        // find if any of our recognizable words have been typed
         var curKeys = keyArray.map(function(k) { return k.letter; }).join('');
-        return _.find(words, function(word) {
+        return _.find(dictionary, function(word) {
             return word.regex.test(curKeys);
         });    
     }
@@ -55,10 +78,13 @@ $(document).ready(function() {
         return keyArray.slice(start, start + word.word.length);
     }
 
-    function createTimingVector(sliced) {
-        return _.flatten(_.map(sliced, function(key) {
-            return [key.downtime, key.uptime - key.downtime]
+    function createTimingVector(keyArray) {
+        return _.flatten(_.map(keyArray, function(key, i) {
+            var flightTime = (i > 0) ? keyArray[i - 1].uptime - key.downtime : 0;
+            if (i === 0) {
+                return [key.uptime - key.downtime]
+            }
+            return [flightTime, key.uptime - key.downtime]
         }));
     }
 });
-
