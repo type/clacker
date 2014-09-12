@@ -1,6 +1,6 @@
 /* Covariance functions */
 function createCovarianceMatrix(timingVectorMatrix) {
-    var transposed = transpose(timingVectorMatrix); // input matrix has columns as rows
+    var transposed = transpose(timingVectorMatrix); // input matrix has columns as rows -- need other way
     var n = transposed.length,
         S = new Array(n);
     for (var i = 0; i < n; i++) {
@@ -14,7 +14,36 @@ function createCovarianceMatrix(timingVectorMatrix) {
             S[j][i] = S[i][j]; // variance values are reflected across top left - bottom right diagonal
         }
     }
-    console.log(JSON.stringify(S));
+    console.log("Covariance matrix", JSON.stringify(S));
+    return S;
+}
+
+function getMeanVector(matrix) {
+    var transposed = transpose(matrix); // input matrix has columns as rows -- need other way
+    return meanVector(transposed); // mean vector for use to compute mahalanobis distance
+}
+
+function computeMahalanobisDistance(covarianceMatrix, meanVector, sampleVector) {
+    // square root (Transpose(sampleVector - meanVector) * Inverse Covariance * (sampleVector - Mean Vector))
+        // names are confusing here, but we need a columnar matrix for the "transpose difference" (left) matrix,
+        // and a row matrix for the regular "difference". This is a cheap trick to get them.
+    var differenceTranspose = [difference(sampleVector, meanVector)], // need a columnar matrix 
+        differenceVector = transpose(differenceTranspose), // need a row matrix
+        inverseCovariance = matrix_invert(covarianceMatrix);
+
+    var mahalanobisDistance = multiplyMatrices(multiplyMatrices(differenceTranspose, inverseCovariance), differenceVector);
+    return mahalanobisDistance[0][0];
+}
+
+function classifyVector(mahalanobisDistance, threshold) {
+    // if it's over something, it's bad
+    return mahalanobisDistance <= 2 * 30000; // 30000 just a standin value based off my own typing patterns
+}
+
+function difference(v1, v2) {
+    return _.map(v1, function(value, index) {
+        return value - v2[index];
+    });
 }
 
 function vari(vector) {
@@ -34,6 +63,22 @@ function mean(vector) {
     return n / vector.length;
 }
 
+function multiplyMatrices(m1, m2) {
+    // from http://tech.pro/tutorial/1527/matrix-multiplication-in-functional-javascript
+    var result = [];
+    for (var i = 0; i < m1.length; i++) {
+        result[i] = [];
+        for (var j = 0; j < m2[0].length; j++) {
+            var sum = 0;
+            for (var k = 0; k < m1[0].length; k++) {
+                sum += m1[i][k] * m2[k][j];
+            }
+            result[i][j] = sum;
+        }
+    }
+    return result;
+}
+
 function cov(a, b) {
     // This was taken from https://github.com/bytespider/covariance
     var length = a.length;
@@ -50,6 +95,21 @@ function cov(a, b) {
     }
 
     return mean(values);
+}
+
+
+function meanVector(matrix) {
+    // go through each of the items in the array
+    // for each index in each of the arrays, we need to maintain some partial sum
+    console.log("Input to mean vector", matrix);
+    var mean = _.map(matrix, function(row) {
+        return (_.reduce(row, function(memo, num) {
+            return memo + num;
+        }, 0))/row.length;
+    });
+
+    console.log("Average vector", mean);
+    return mean;
 }
 
 
