@@ -12,37 +12,51 @@ $(document).ready(function() {
         };
     });
 
+    $('#reset').on('click', function() {
+        localStorage.clear();
+    });
+
     
     $('#blah').on('keydown', function(e) {
         keys.push({letter: String.fromCharCode(e.keyCode), downtime: e.timeStamp, uptime: null});
     });
 
     $('#blah').on('keyup', function(e) {
-        keys[findNearest(keys, String.fromCharCode(e.keyCode))].uptime = e.timeStamp;
+        var nearest = keys[findNearest(keys, String.fromCharCode(e.keyCode))];
+        if (nearest) {
+            nearest.uptime = e.timeStamp;
+        }
+        // It may take until the key up event AFTER the last (letter in the word) key was 
+        // released to capture the ACTUAL last release.
+        // Example: down t down h up t down e up e up h
         var wordObj = testWords(keys, dictionary);
-        if (wordObj) {
+        if (wordObj && _.every(keys, function(k) {return k.uptime && k.downtime;})) {
             var theWord = wordObj.word;
             // now we need to find the relevant keystrokes in the keys array since more than what we need
             // may have been captured
             var timingVector = createTimingVector(findRelevantKeys(keys, wordObj));
-            keys = _.last(keys, 2); // people press multiple keys at the same time while typing--can't fully clear array
+            keys = _.last(keys, wordObj.word.length - 1); // people press multiple keys at the same time while typing--can't fully clear array
 
             var vectorArray = localStorage.getItem(theWord);
             vectorArray = JSON.parse(vectorArray) || [];
 
-            if (vectorArray.length === 6) {
-                if (!localStorage.getItem(theWord + "CovarianceMatrix")) {
-                    // We have enough data to establish a covariance matrix
-                    var covariance = createCovarianceMatrix(vectorArray);
-                    console.log(covariance);
+            if (vectorArray.length === 10) {
+                if (!localStorage.getItem(theWord + "CovarianceMatrixInverse")) {
+                    // We have just enough data to establish a covariance matrix and mean vector
+                    var covariance = createCovarianceMatrixInverse(vectorArray);
                     var mean = getMeanVector(vectorArray);
-                    localStorage.setItem(theWord + "CovarianceMatrix", JSON.stringify(covariance));
+                    var threshold = calculateThreshold(covariance, mean, vectorArray);
+                    localStorage.setItem(theWord + "CovarianceMatrixInverse", JSON.stringify(covariance));
                     localStorage.setItem(theWord + "MeanVector", JSON.stringify(mean));
+                    localStorage.setItem(theWord + "Threshold", JSON.stringify(threshold));
                 }
                 else {
-                    // test the timingVector!
-                    var mahalanobisDistance = computeMahalanobisDistance(JSON.parse(localStorage.getItem(theWord + "CovarianceMatrix")), JSON.parse(localStorage.getItem(theWord + "MeanVector")), timingVector);
-                    if (!classifyVector(mahalanobisDistance)) {
+                    // test the timingVector to classify it
+                    // TODO use the right value for classifyVector's second param
+                    var mahalanobisDistance = computeMahalanobisDistance(JSON.parse(localStorage.getItem(theWord + "CovarianceMatrixInverse")), JSON.parse(localStorage.getItem(theWord + "MeanVector")), timingVector);
+                    var threshold = JSON.parse(localStorage.getItem(wordObj.word + "Threshold"));
+                    console.log("Mahalanobis distance", mahalanobisDistance);
+                    if (! classifyVector(mahalanobisDistance, threshold)) {
                         alert("Not your normal self?");
                     }
                 }

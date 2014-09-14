@@ -1,5 +1,5 @@
 /* Covariance functions */
-function createCovarianceMatrix(timingVectorMatrix) {
+function createCovarianceMatrixInverse(timingVectorMatrix) {
     var transposed = transpose(timingVectorMatrix); // input matrix has columns as rows -- need other way
     var n = transposed.length,
         S = new Array(n);
@@ -14,8 +14,7 @@ function createCovarianceMatrix(timingVectorMatrix) {
             S[j][i] = S[i][j]; // variance values are reflected across top left - bottom right diagonal
         }
     }
-    console.log("Covariance matrix", JSON.stringify(S));
-    return S;
+    return matrix_invert(S);
 }
 
 function getMeanVector(matrix) {
@@ -23,21 +22,27 @@ function getMeanVector(matrix) {
     return meanVector(transposed); // mean vector for use to compute mahalanobis distance
 }
 
-function computeMahalanobisDistance(covarianceMatrix, meanVector, sampleVector) {
+function computeMahalanobisDistance(covarianceMatrixInverse, meanVector, sampleVector) {
     // square root (Transpose(sampleVector - meanVector) * Inverse Covariance * (sampleVector - Mean Vector))
         // names are confusing here, but we need a columnar matrix for the "transpose difference" (left) matrix,
         // and a row matrix for the regular "difference". This is a cheap trick to get them.
     var differenceTranspose = [difference(sampleVector, meanVector)], // need a columnar matrix 
-        differenceVector = transpose(differenceTranspose), // need a row matrix
-        inverseCovariance = matrix_invert(covarianceMatrix);
+        differenceVector = transpose(differenceTranspose); // need a row matrix
 
-    var mahalanobisDistance = multiplyMatrices(multiplyMatrices(differenceTranspose, inverseCovariance), differenceVector);
+    var mahalanobisDistance = multiplyMatrices(multiplyMatrices(differenceTranspose, covarianceMatrixInverse), differenceVector);
     return mahalanobisDistance[0][0];
 }
 
 function classifyVector(mahalanobisDistance, threshold) {
-    // if it's over something, it's bad
-    return mahalanobisDistance <= 2 * 30000; // 30000 just a standin value based off my own typing patterns
+    console.log(arguments);
+    return mahalanobisDistance <= 10 * threshold.range + threshold.max; 
+}
+
+function calculateThreshold(covarianceInverse, meanVector, vectorArray) {
+    var distances = _.map(vectorArray, function(v) {
+        return computeMahalanobisDistance(covarianceInverse, meanVector, v);
+    });
+    return {max: _.max(distances), range: _.max(distances) - _.min(distances)};
 }
 
 function difference(v1, v2) {
@@ -99,16 +104,11 @@ function cov(a, b) {
 
 
 function meanVector(matrix) {
-    // go through each of the items in the array
-    // for each index in each of the arrays, we need to maintain some partial sum
-    console.log("Input to mean vector", matrix);
     var mean = _.map(matrix, function(row) {
         return (_.reduce(row, function(memo, num) {
             return memo + num;
         }, 0))/row.length;
     });
-
-    console.log("Average vector", mean);
     return mean;
 }
 
