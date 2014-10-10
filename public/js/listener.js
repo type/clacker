@@ -14,6 +14,8 @@ $(document).ready(function() {
 
     $('#reset').on('click', function() {
         localStorage.clear();
+        $('#distance-chart').html('');
+        $('#timing-chart').html('');
         $('#blah').val('');
     });
 
@@ -24,11 +26,14 @@ $(document).ready(function() {
 
     $('#blah').on('keyup', function(e) {
         var nearest = keys[findNearest(keys, String.fromCharCode(e.keyCode))];
+
         var mahalanobisDistance,
+            mDistanceArray,
             covariance,
             mean,
-            meanArray,
-            sampleArray,
+            meanChartData,
+            sampleChartData,
+            distanceChartData,
             threshold;
 
         if (nearest) {
@@ -46,7 +51,7 @@ $(document).ready(function() {
             keys = _.last(keys, wordObj.word.length - 1); // people press multiple keys at the same time while typing--can't fully clear array
 
             var vectorArray = localStorage.getItem(theWord);
-            vectorArray = JSON.parse(vectorArray) || [];
+                vectorArray = JSON.parse(vectorArray) || [];
 
             if (vectorArray.length === 10) {
                 if (!localStorage.getItem(theWord + "CovarianceMatrixInverse")) {
@@ -61,21 +66,42 @@ $(document).ready(function() {
                 }
                 else {
                     // test the timingVector to classify it
-                    covariance = covariance || JSON.parse(localStorage.getItem(theWord + "CovarianceMatrixInverse"));
-                    mean = mean || JSON.parse(localStorage.getItem(theWord + "MeanVector"))
-                    threshold = threshold || JSON.parse(localStorage.getItem(wordObj.word + "Threshold"));
+                    covariance = JSON.parse(localStorage.getItem(theWord + "CovarianceMatrixInverse"));
+                    mean = JSON.parse(localStorage.getItem(theWord + "MeanVector"))
+                    threshold = JSON.parse(localStorage.getItem(theWord + "Threshold"));
                     mahalanobisDistance  = computeMahalanobisDistance(covariance, mean, timingVector);
+                    mDistanceArray = JSON.parse(localStorage.getItem(theWord + "Distances")) || [];
+                    mDistanceArray.push(mahalanobisDistance);
+                    localStorage.setItem(theWord + "Distances", JSON.stringify(mDistanceArray));
 
                     console.log("Mahalanobis distance", mahalanobisDistance);
-                    meanArray = meanArray || _.map(mean, function(v, i) {
+
+                    distanceChartData = _.map(mDistanceArray, function(v, i) {
                         return [i, v];
                     });
-                    sampleArray = _.map(timingVector, function(v, i) {
+
+                    meanChartData = _.map(mean, function(v, i) {
                         return [i, v];
                     });
-                    $.plot($("#chart"), [ { label: "Mean", color: 'black', data: meanArray },
-                    { label: "Sample", data: sampleArray }
-                    ], { yaxis: { max: _.max(timingVector.concat(mean)) } });
+
+                    sampleChartData = _.map(timingVector, function(v, i) {
+                        return [i, v];
+                    });
+
+
+                    
+                    // draw comparison graph of this timing vector vs mean vector
+                    $.plot($("#timing-chart"), [ { label: "Mean", color: 'black', data: meanChartData },
+                        { label: "Sample", data: sampleChartData }
+                        ], 
+                        { yaxis: { max: _.max(timingVector.concat(mean)) } }
+                    );
+
+                    console.log('max',  _.max(mDistanceArray));
+                    $.plot($("#distance-chart"), [ { label: "Mahalanobis Distance", color: 'black', data: distanceChartData }], 
+                        { yaxis: { max: _.max(mDistanceArray) } }
+                    );
+
                     if (! classifyVector(mahalanobisDistance, threshold)) {
                         alert("Not your normal self?");
                     }
