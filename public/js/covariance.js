@@ -40,7 +40,9 @@ function classifyVector(mahalanobisDistance, threshold) {
 
 function calculateThreshold(covarianceInverse, meanVector, vectorArray) {
     var distances = _.map(vectorArray, function(v) {
-        return computeMahalanobisDistance(covarianceInverse, meanVector, v);
+        var mahal = computeMahalanobisDistance(covarianceInverse, meanVector, v);
+        console.log(mahal);
+        return mahal;
     });
     return {max: _.max(distances), range: _.max(distances) - _.min(distances)};
 }
@@ -111,7 +113,6 @@ function meanVector(matrix) {
     });
     return mean;
 }
-
 
 
 /* Mahalanobis distance functions */

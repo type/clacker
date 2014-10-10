@@ -1,6 +1,6 @@
 $(document).ready(function() {
     var keys = [],
-        dictionary = [ "the", "bread"],
+        dictionary = [ "the", "bread", "kevin", "what"],
         maxWord = _.max(_.map(dictionary, function(w) {
             return w.length;
         }));
@@ -14,6 +14,7 @@ $(document).ready(function() {
 
     $('#reset').on('click', function() {
         localStorage.clear();
+        $('#blah').val('');
     });
 
     
@@ -23,6 +24,13 @@ $(document).ready(function() {
 
     $('#blah').on('keyup', function(e) {
         var nearest = keys[findNearest(keys, String.fromCharCode(e.keyCode))];
+        var mahalanobisDistance,
+            covariance,
+            mean,
+            meanArray,
+            sampleArray,
+            threshold;
+
         if (nearest) {
             nearest.uptime = e.timeStamp;
         }
@@ -43,19 +51,31 @@ $(document).ready(function() {
             if (vectorArray.length === 10) {
                 if (!localStorage.getItem(theWord + "CovarianceMatrixInverse")) {
                     // We have just enough data to establish a covariance matrix and mean vector
-                    var covariance = createCovarianceMatrixInverse(vectorArray);
-                    var mean = getMeanVector(vectorArray);
-                    var threshold = calculateThreshold(covariance, mean, vectorArray);
+                    covariance = createCovarianceMatrixInverse(vectorArray);
+                    mean = getMeanVector(vectorArray);
+                    threshold = calculateThreshold(covariance, mean, vectorArray);
+
                     localStorage.setItem(theWord + "CovarianceMatrixInverse", JSON.stringify(covariance));
                     localStorage.setItem(theWord + "MeanVector", JSON.stringify(mean));
                     localStorage.setItem(theWord + "Threshold", JSON.stringify(threshold));
                 }
                 else {
                     // test the timingVector to classify it
-                    // TODO use the right value for classifyVector's second param
-                    var mahalanobisDistance = computeMahalanobisDistance(JSON.parse(localStorage.getItem(theWord + "CovarianceMatrixInverse")), JSON.parse(localStorage.getItem(theWord + "MeanVector")), timingVector);
-                    var threshold = JSON.parse(localStorage.getItem(wordObj.word + "Threshold"));
+                    covariance = covariance || JSON.parse(localStorage.getItem(theWord + "CovarianceMatrixInverse"));
+                    mean = mean || JSON.parse(localStorage.getItem(theWord + "MeanVector"))
+                    threshold = threshold || JSON.parse(localStorage.getItem(wordObj.word + "Threshold"));
+                    mahalanobisDistance  = computeMahalanobisDistance(covariance, mean, timingVector);
+
                     console.log("Mahalanobis distance", mahalanobisDistance);
+                    meanArray = meanArray || _.map(mean, function(v, i) {
+                        return [i, v];
+                    });
+                    sampleArray = _.map(timingVector, function(v, i) {
+                        return [i, v];
+                    });
+                    $.plot($("#chart"), [ { label: "Mean", color: 'black', data: meanArray },
+                    { label: "Sample", data: sampleArray }
+                    ], { yaxis: { max: _.max(timingVector.concat(mean)) } });
                     if (! classifyVector(mahalanobisDistance, threshold)) {
                         alert("Not your normal self?");
                     }
