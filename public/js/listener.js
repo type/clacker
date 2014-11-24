@@ -16,24 +16,32 @@ $(document).ready(function() {
         localStorage.clear();
         $('#distance-chart').html('');
         $('#timing-chart').html('');
-        $('#blah').val('');
+        $('#manhattan-chart').html('');
+        $('#euclidean-chart').html('');
+        $('#input-area').val('');
     });
 
     
-    $('#blah').on('keydown', function(e) {
+    $('#input-area').on('keydown', function(e) {
         keys.push({letter: String.fromCharCode(e.keyCode), downtime: e.timeStamp, uptime: null});
     });
 
-    $('#blah').on('keyup', function(e) {
+    $('#input-area').on('keyup', function(e) {
         var nearest = keys[findNearest(keys, String.fromCharCode(e.keyCode))];
 
         var mahalanobisDistance,
             mDistanceArray,
+            eDistanceArray,
+            manDistanceArray,
             covariance,
+            euclideanDist,
+            manhattanDist,
             mean,
             meanChartData,
+            euclideanChartData,
+            manhattanChartData,
             sampleChartData,
-            distanceChartData,
+            mahalChartData,
             threshold;
 
         if (nearest) {
@@ -43,6 +51,7 @@ $(document).ready(function() {
         // released to capture the ACTUAL last release.
         // Example: down t down h up t down e up e up h
         var wordObj = testWords(keys, dictionary);
+
         if (wordObj && _.every(keys, function(k) {return k.uptime && k.downtime;})) {
             var theWord = wordObj.word;
             // now we need to find the relevant keystrokes in the keys array since more than what we need
@@ -69,37 +78,51 @@ $(document).ready(function() {
                     covariance = JSON.parse(localStorage.getItem(theWord + "CovarianceMatrixInverse"));
                     mean = JSON.parse(localStorage.getItem(theWord + "MeanVector"))
                     threshold = JSON.parse(localStorage.getItem(theWord + "Threshold"));
-                    mahalanobisDistance  = computeMahalanobisDistance(covariance, mean, timingVector);
-                    mDistanceArray = JSON.parse(localStorage.getItem(theWord + "Distances")) || [];
+                    mahalanobisDistance  = mahalDist(covariance, mean, timingVector);
+                    euclideanDist = euclideanDistance(mean, timingVector);
+                    manhattanDist = manhattanDistance(mean, timingVector);
+
+                    mDistanceArray = JSON.parse(localStorage.getItem(theWord + "MahalDistances")) || [];
                     mDistanceArray.push(mahalanobisDistance);
-                    localStorage.setItem(theWord + "Distances", JSON.stringify(mDistanceArray));
 
-                    console.log("Mahalanobis distance", mahalanobisDistance);
+                    eDistanceArray = JSON.parse(localStorage.getItem(theWord + "EucDistances")) || [];
+                    eDistanceArray.push(euclideanDist);
 
-                    distanceChartData = _.map(mDistanceArray, function(v, i) {
-                        return [i, v];
-                    });
+                    manDistanceArray = JSON.parse(localStorage.getItem(theWord + "ManDistances")) || [];
+                    manDistanceArray.push(manhattanDist);
+                    
+                    localStorage.setItem(theWord + "MahalDistances", JSON.stringify(mDistanceArray));
+                    localStorage.setItem(theWord + "EucDistances", JSON.stringify(eDistanceArray));
+                    localStorage.setItem(theWord + "ManDistances", JSON.stringify(manDistanceArray));
 
-                    meanChartData = _.map(mean, function(v, i) {
-                        return [i, v];
-                    });
+                    console.log("Mahalanobis distance", mahalanobisDistance, "threshold", threshold);
+                    console.log("Euclidean distance", euclideanDist);
+                    console.log("Manhattan distance", manhattanDist);
 
-                    sampleChartData = _.map(timingVector, function(v, i) {
-                        return [i, v];
-                    });
+                    mahalChartData = pairs(mDistanceArray);
 
+                    euclideanChartData = pairs(eDistanceArray);
 
+                    manhattanChartData = pairs(manDistanceArray);
+
+                    meanChartData = pairs(mean);
+
+                    sampleChartData = pairs(timingVector);
                     
                     // draw comparison graph of this timing vector vs mean vector
-                    $.plot($("#timing-chart"), [ { label: "Mean", color: 'black', data: meanChartData },
+                    $.plot($("#timing-chart"), [ 
+                        { label: "Mean", color: 'black', data: meanChartData },
                         { label: "Sample", data: sampleChartData }
                         ], 
                         { yaxis: { max: _.max(timingVector.concat(mean)) } }
                     );
 
-                    console.log('max',  _.max(mDistanceArray));
-                    $.plot($("#distance-chart"), [ { label: "Mahalanobis Distance", color: 'black', data: distanceChartData }], 
-                        { yaxis: { max: _.max(mDistanceArray) } }
+                    $.plot($("#distance-chart"), [ 
+                        { label: "Mahalanobis Distance", color: 'black', data: mahalChartData },
+                        { label: "Euclidean Distance", color: 'blue', data: euclideanChartData },
+                        { label: "Manhattan Distance", color: 'green', data: manhattanChartData }
+                        ], 
+                        { yaxis: { max: _.max(mDistanceArray.concat(eDistanceArray).concat(manDistanceArray)) } }
                     );
 
                     if (! classifyVector(mahalanobisDistance, threshold)) {
@@ -165,5 +188,11 @@ $(document).ready(function() {
         }));
         console.log(vec);
         return vec;
+    }
+
+    function pairs(array) {
+        return  _.map(array, function(v, i) {
+            return [i, v];
+        });
     }
 });

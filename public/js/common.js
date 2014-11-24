@@ -1,65 +1,12 @@
-/* Covariance functions */
-function createCovarianceMatrixInverse(timingVectorMatrix) {
-    var transposed = transpose(timingVectorMatrix); // input matrix has columns as rows -- need other way
-    var n = transposed.length,
-        S = new Array(n);
-    for (var i = 0; i < n; i++) {
-        // create n*n matrix from m*n input matrix (m = number rows, n = number of cols)
-        S[i] = new Array(n);
-    }
-    for (var i = 0; i < n; i++) {
-        S[i][i] = vari(transposed[i]);
-        for (var j = i + 1; j < n; j++) {
-            S[i][j] = cov(transposed[i], transposed[j]);
-            S[j][i] = S[i][j]; // variance values are reflected across top left - bottom right diagonal
-        }
-    }
-    return matrix_invert(S);
-}
-
 function getMeanVector(matrix) {
     var transposed = transpose(matrix); // input matrix has columns as rows -- need other way
     return meanVector(transposed); // mean vector for use to compute mahalanobis distance
-}
-
-function computeMahalanobisDistance(covarianceMatrixInverse, meanVector, sampleVector) {
-    // square root (Transpose(sampleVector - meanVector) * Inverse Covariance * (sampleVector - Mean Vector))
-        // names are confusing here, but we need a columnar matrix for the "transpose difference" (left) matrix,
-        // and a row matrix for the regular "difference". This is a cheap trick to get them.
-    var differenceTranspose = [difference(sampleVector, meanVector)], // need a columnar matrix 
-        differenceVector = transpose(differenceTranspose); // need a row matrix
-
-    var mahalanobisDistance = multiplyMatrices(multiplyMatrices(differenceTranspose, covarianceMatrixInverse), differenceVector);
-    return mahalanobisDistance[0][0];
-}
-
-function classifyVector(mahalanobisDistance, threshold) {
-    console.log(arguments);
-    return mahalanobisDistance <= 10 * threshold.range + threshold.max; 
-}
-
-function calculateThreshold(covarianceInverse, meanVector, vectorArray) {
-    var distances = _.map(vectorArray, function(v) {
-        var mahal = computeMahalanobisDistance(covarianceInverse, meanVector, v);
-        console.log(mahal);
-        return mahal;
-    });
-    return {max: _.max(distances), range: _.max(distances) - _.min(distances)};
 }
 
 function difference(v1, v2) {
     return _.map(v1, function(value, index) {
         return value - v2[index];
     });
-}
-
-function vari(vector) {
-    var v = 0;
-    for (var i = 0; i < vector.length; i++) {
-        v += Math.pow((vector[i] - mean(vector)), 2);
-    }
-    v = v / vector.length;
-    return v;
 }
 
 function mean(vector) {
@@ -86,36 +33,6 @@ function multiplyMatrices(m1, m2) {
     return result;
 }
 
-function cov(a, b) {
-    // This was taken from https://github.com/bytespider/covariance
-    var length = a.length;
-    var i = 0;
-
-    var mean_a = mean(a);
-    var mean_b = mean(b);
-    var values = [];
-
-    for ( ; i < length; i += 1) {
-        var diff_a = a[i] - mean_a;
-        var diff_b = b[i] - mean_b;
-        values.push(diff_a * diff_b);
-    }
-
-    return mean(values);
-}
-
-
-function meanVector(matrix) {
-    var mean = _.map(matrix, function(row) {
-        return (_.reduce(row, function(memo, num) {
-            return memo + num;
-        }, 0))/row.length;
-    });
-    return mean;
-}
-
-
-/* Mahalanobis distance functions */
 function transpose(mat) {
     return Object.keys(mat[0]).map(
         function (c) { return mat.map(function (r) { return r[c]; }); }
@@ -124,7 +41,7 @@ function transpose(mat) {
 
 // Returns the inverse of matrix `M`.
 function matrix_invert(M){
-    // Taken from http://blog.acipo.com/matrix-inversion-in-javascript/
+    // http://blog.acipo.com/matrix-inversion-in-javascript/
     // I use Guassian Elimination to calculate the inverse:
     // (1) 'augment' the matrix (left) by the identity (on the right)
     // (2) Turn the matrix on the left into the identity by elemetry row ops
@@ -137,7 +54,7 @@ function matrix_invert(M){
     //if the matrix isn't square: exit (error)
     if(M.length !== M[0].length){return;}
     
-    //create the identity matrix (I), and a copy (C) of the original
+    //create the identity matrix (I) and a copy (C) of the original
     var i=0, ii=0, j=0, dim=M.length, e=0, t=0;
     var I = [], C = [];
     for(i=0; i<dim; i+=1){
@@ -216,3 +133,13 @@ function matrix_invert(M){
     //matrix I should be the inverse:
     return I;
 }
+
+function meanVector(matrix) {
+    var mean = _.map(matrix, function(row) {
+        return (_.reduce(row, function(memo, num) {
+            return memo + num;
+        }, 0))/row.length;
+    });
+    return mean;
+}
+

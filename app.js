@@ -15,7 +15,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(app.router);
 
 
-app.get('/index', require('./controllers/index.js'));
+app.get('/', require('./controllers/index.js'));
 
 app.listen(8001, function(){
     console.log('listening on 8001');
