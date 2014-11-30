@@ -9,6 +9,12 @@ function difference(v1, v2) {
     });
 }
 
+function normalizedDifference(v1, v2, ranges) {
+    return _.map(v1, function(value, index) {
+        return (value - v2[index])/ranges[index];
+    });
+}
+
 function mean(vector) {
     var n = 0;
     for (var i = 0; i < vector.length; i++) {

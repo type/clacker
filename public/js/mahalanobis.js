@@ -31,6 +31,20 @@ function classifyVector(mahalanobisDistance, threshold) {
     return mahalanobisDistance <= 10 * threshold.range + threshold.max; 
 }
 
+function mahalDistNormalized(covarianceMatrixInverse, ranges, meanVector, testVector) {
+    // mahalDist = sqrt (Transpose(testVector - meanVector) * Inverse Covariance * (sampleVector - Mean Vector))
+    // We need a columnar matrix for the "transpose difference" (left) matrix,
+    // and a row matrix for the regular "difference". This is a cheap trick to get them.
+    var differenceTranspose = [normalizedDifference(testVector, meanVector, ranges)], // need a columnar matrix 
+        differenceVector = transpose(differenceTranspose); // need a row matrix
+
+    var mahalanobisDistanceSquared = multiplyMatrices(multiplyMatrices(differenceTranspose, covarianceMatrixInverse), differenceVector);
+    return Math.sqrt(mahalanobisDistanceSquared[0][0]);} // result is a one-item two dimensional array
+
+function classifyVector(mahalanobisDistance, threshold) {
+    return mahalanobisDistance <= 10 * threshold.range + threshold.max; 
+}
+
 function calculateThreshold(covarianceInverse, meanVector, vectorArray) {
     var distances = _.map(vectorArray, function(v) {
         var mahal = mahalDist(covarianceInverse, meanVector, v);

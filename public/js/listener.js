@@ -30,6 +30,7 @@ $(document).ready(function() {
         var nearest = keys[findNearest(keys, String.fromCharCode(e.keyCode))];
 
         var mahalanobisDistance,
+            neighborDistances,
             mDistanceArray,
             eDistanceArray,
             manDistanceArray,
@@ -79,6 +80,10 @@ $(document).ready(function() {
                     mean = JSON.parse(localStorage.getItem(theWord + "MeanVector"))
                     threshold = JSON.parse(localStorage.getItem(theWord + "Threshold"));
                     mahalanobisDistance  = mahalDist(covariance, mean, timingVector);
+                    
+                    // find the distances to all known nodes (both euclidean and mahal)
+                    neighborDistances = getSortedNeighborDistances(timingVector, vectorArray, covariance);
+                    console.log(neighborDistances);
                     euclideanDist = euclideanDistance(mean, timingVector);
                     manhattanDist = manhattanDistance(mean, timingVector);
 
