@@ -17,16 +17,16 @@ function findRanges(vectorArray) {
 }
 
 function getSortedNeighborDistances(sampleVector, vectorArray, covarianceMatrixInverse) {
-    // find how far this sample is from all the others
-    // problem right now is vector array contains this element still - need to remove it somehow
+    // Finds both Euclidean and Mahalanobis distance between the sampleVector and all the training vectors in vectorArray
     var ranges = findRanges(vectorArray);
     var distances = new Array(vectorArray.length);
+
     for (var vectorIndex in vectorArray) {
         var sum = 0;
-        for (var i = 0; i < ranges.length; i++) {
-            // normalize the data
-            var delta = vectorArray[vectorIndex][i] - sampleVector[i];
-            delta = Math.pow(delta / ranges[i], 2);
+        for (var featureIndex = 0; featureIndex < ranges.length; featureIndex++) {
+            // euclidean distance
+            var delta = vectorArray[vectorIndex][featureIndex] - sampleVector[featureIndex];
+            delta = Math.pow(delta / ranges[featureIndex], 2); // normalize
             sum += delta;
         }
         distances[vectorIndex] = { 
@@ -35,5 +35,24 @@ function getSortedNeighborDistances(sampleVector, vectorArray, covarianceMatrixI
         };
     }
 
-    return distances;
+    // sort the resultant array by mahalanobis distance
+    return _.sortBy(distances, function(d) {
+        return d.mahal;
+    });
+}
+
+
+function calculateThresholdNN(vectorArray, covarianceMatrixInverse, toleranceFactor) {
+    var maxDist = 0;
+    var localMax;
+    var array;
+    for (var i = 0; i < vectorArray.length; i++) {
+        // since we're finding the furthest distance, it's okay to leave this vector in the array
+        // if you were finding the nearest neighbor, you must splice this array out or else you'll get 0 distance (distance to self)
+        localMax = _.last(getSortedNeighborDistances(vectorArray[i], vectorArray, covarianceMatrixInverse)).mahal;
+        if (localMax > maxDist) {
+            maxDist = localMax;
+        }
+    }
+    return maxDist * toleranceFactor;
 }

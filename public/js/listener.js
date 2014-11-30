@@ -1,5 +1,6 @@
 $(document).ready(function() {
     var keys = [],
+        tolerance = 2,
         dictionary = [ "the", "bread", "kevin", "what"],
         maxWord = _.max(_.map(dictionary, function(w) {
             return w.length;
@@ -68,7 +69,7 @@ $(document).ready(function() {
                     // We have just enough data to establish a covariance matrix and mean vector
                     covariance = createCovarianceMatrixInverse(vectorArray);
                     mean = getMeanVector(vectorArray);
-                    threshold = calculateThreshold(covariance, mean, vectorArray);
+                    threshold = calculateThresholdNN(vectorArray, covariance, tolerance);
 
                     localStorage.setItem(theWord + "CovarianceMatrixInverse", JSON.stringify(covariance));
                     localStorage.setItem(theWord + "MeanVector", JSON.stringify(mean));
@@ -83,7 +84,6 @@ $(document).ready(function() {
                     
                     // find the distances to all known nodes (both euclidean and mahal)
                     neighborDistances = getSortedNeighborDistances(timingVector, vectorArray, covariance);
-                    console.log(neighborDistances);
                     euclideanDist = euclideanDistance(mean, timingVector);
                     manhattanDist = manhattanDistance(mean, timingVector);
 
@@ -99,10 +99,6 @@ $(document).ready(function() {
                     localStorage.setItem(theWord + "MahalDistances", JSON.stringify(mDistanceArray));
                     localStorage.setItem(theWord + "EucDistances", JSON.stringify(eDistanceArray));
                     localStorage.setItem(theWord + "ManDistances", JSON.stringify(manDistanceArray));
-
-                    console.log("Mahalanobis distance", mahalanobisDistance, "threshold", threshold);
-                    console.log("Euclidean distance", euclideanDist);
-                    console.log("Manhattan distance", manhattanDist);
 
                     mahalChartData = pairs(mDistanceArray);
 
@@ -130,13 +126,18 @@ $(document).ready(function() {
                         { yaxis: { max: _.max(mDistanceArray.concat(eDistanceArray).concat(manDistanceArray)) } }
                     );
 
-                    if (! classifyVector(mahalanobisDistance, threshold)) {
-                        alert("Not your normal self?");
+                    var nn = _.first(neighborDistances).mahal;
+                    
+                    console.log("The threshold", threshold, "nn is", _.first(neighborDistances).mahal); 
+
+                    if (nn > threshold) {
+                        alert("Not your normal self?" + nn);
                     }
                 }
             }
 
             else {
+                // pile them in
 
                 vectorArray.push(timingVector)
                 localStorage.setItem(wordObj.word, JSON.stringify(vectorArray));

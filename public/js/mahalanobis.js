@@ -32,9 +32,7 @@ function classifyVector(mahalanobisDistance, threshold) {
 }
 
 function mahalDistNormalized(covarianceMatrixInverse, ranges, meanVector, testVector) {
-    // mahalDist = sqrt (Transpose(testVector - meanVector) * Inverse Covariance * (sampleVector - Mean Vector))
-    // We need a columnar matrix for the "transpose difference" (left) matrix,
-    // and a row matrix for the regular "difference". This is a cheap trick to get them.
+    // same as mahalDist, but normalize the values of the timing data to be between -1 and 1 when computing distance
     var differenceTranspose = [normalizedDifference(testVector, meanVector, ranges)], // need a columnar matrix 
         differenceVector = transpose(differenceTranspose); // need a row matrix
 
