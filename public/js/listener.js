@@ -1,7 +1,7 @@
 $(document).ready(function() {
     var keys = [],
         tolerance = 2,
-        dictionary = [ "the", "bread", "kevin", "what"],
+        dictionary = ["number", "people", "there", "which", "their", "other", "about", "these", "would", "write", "could", "first", "water", "that", "with", "they", "this", "have", "from", "word", "what", "were", "when", "your", "said", "each", "will", "many", "then", "them", "some", "make", "like", "into", "time", "look", "more", "than", "been", "call", "find", "long", "down", "come", "made", "part", "and", "was", "for", "are", "one", "had", "but", "not", "can", "use", "she", "how", "him", "has", "two", "see", "way", "who", "oil", "its", "now", "day", "did", "get", "may"],
         maxWord = _.max(_.map(dictionary, function(w) {
             return w.length;
         }));
