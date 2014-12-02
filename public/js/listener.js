@@ -1,7 +1,10 @@
 $(document).ready(function() {
     var keys = [],
         tolerance = 2,
-        dictionary = ["number", "people", "there", "which", "their", "other", "about", "these", "would", "write", "could", "first", "water", "that", "with", "they", "this", "have", "from", "word", "what", "were", "when", "your", "said", "each", "will", "many", "then", "them", "some", "make", "like", "into", "time", "look", "more", "than", "been", "call", "find", "long", "down", "come", "made", "part", "and", "was", "for", "are", "one", "had", "but", "not", "can", "use", "she", "how", "him", "has", "two", "see", "way", "who", "oil", "its", "now", "day", "did", "get", "may"],
+        real = [],
+        imposters = [],
+        dictionary = ["there"]/*["number", "people", "there", "which", "their", "other", "about", "these", "would", "write", "could", "first", "water", "that", "with", "they", "this", "have", "from", "word", "what", "were", "when", "your", "said", "each", "will", "many", "then", "them", "some", "make", "like", "into", "time", "look", "more", "than", "been", "call", "find", "long", "down", "come", "made", "part", "and", "was", "for", "are", "one", "had", "but", "not", "can", "use", "she", "how", "him", "has", "two", "see", "way", "who", "oil", "its", "now", "day", "did", "get", "may"],*/
+
         maxWord = _.max(_.map(dictionary, function(w) {
             return w.length;
         }));
@@ -64,7 +67,7 @@ $(document).ready(function() {
             var vectorArray = localStorage.getItem(theWord);
                 vectorArray = JSON.parse(vectorArray) || [];
 
-            if (vectorArray.length === 10) {
+            if (vectorArray.length === 20) {
                 if (!localStorage.getItem(theWord + "CovarianceMatrixInverse")) {
                     // We have just enough data to establish a covariance matrix and mean vector
                     covariance = createCovarianceMatrixInverse(vectorArray);
@@ -78,6 +81,19 @@ $(document).ready(function() {
                 else {
                     // test the timingVector to classify it
                     covariance = JSON.parse(localStorage.getItem(theWord + "CovarianceMatrixInverse"));
+                    $.ajax({
+                        type: "POST",
+                        url: "/add",
+                        data: {
+                            "userId": $('#user').val(),
+                            "word": theWord,
+                            "timingVector": timingVector
+                        }, 
+                        success: function() {
+                            //noop
+                        }
+                    });        
+
                     mean = JSON.parse(localStorage.getItem(theWord + "MeanVector"))
                     threshold = JSON.parse(localStorage.getItem(theWord + "Threshold"));
                     mahalanobisDistance  = mahalDist(covariance, mean, timingVector);

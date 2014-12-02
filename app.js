@@ -16,6 +16,7 @@ app.use(app.router);
 
 
 app.get('/', require('./controllers/index.js'));
+app.post('/add', require('./controllers/add.js'));
 
 app.listen(8001, function(){
     console.log('listening on 8001');

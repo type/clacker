@@ -1,7 +1,9 @@
 extends ../layout
 
 block content
-    textarea#input-area(rows="3", cols="50", autofocus)
+    textarea#input-area(rows="3", cols="50", autofocus, placeholder="Type here")
+    textarea#user(placeholder="User")
     button#reset(type="button") Reset
+    #count
     #distance-chart.chart
     #timing-chart.chart
