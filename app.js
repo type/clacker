@@ -16,7 +16,10 @@ app.use(app.router);
 
 
 app.get('/', require('./controllers/index.js'));
-app.post('/add', require('./controllers/add.js'));
+app.get('/errorrates', require('./controllers/errorrates.js'));
+app.post('/addtiming', require('./controllers/add.js'));
+app.post('/finderrorrates', require('./controllers/finderrorrates.js'));
+app.post('/covariance', require('./controllers/covariance.js'));
 
 app.listen(8001, function(){
     console.log('listening on 8001');

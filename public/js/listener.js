@@ -77,13 +77,26 @@ $(document).ready(function() {
                     localStorage.setItem(theWord + "CovarianceMatrixInverse", JSON.stringify(covariance));
                     localStorage.setItem(theWord + "MeanVector", JSON.stringify(mean));
                     localStorage.setItem(theWord + "Threshold", JSON.stringify(threshold));
+                    
+                    $.ajax({
+                        type: "POST",
+                        url: "/covariance",
+                        data: {
+                            "userId": $('#user').val(),
+                            "word": theWord,
+                            "covarianceMatrixInverse": covariance
+                        }, 
+                        success: function() {
+                            //noop
+                        }
+                    });
                 }
                 else {
                     // test the timingVector to classify it
                     covariance = JSON.parse(localStorage.getItem(theWord + "CovarianceMatrixInverse"));
                     $.ajax({
                         type: "POST",
-                        url: "/add",
+                        url: "/addtiming",
                         data: {
                             "userId": $('#user').val(),
                             "word": theWord,
@@ -217,4 +230,33 @@ $(document).ready(function() {
             return [i, v];
         });
     }
+
+    $('#calculate').click(function() {
+        var authentic = $('#authentic-user').val();
+        var imposter = $('#imposter-user').val();
+        var word = $('#word').val();
+        $.ajax({
+            type: "POST",
+            url: "/finderrorrates",
+            data: JSON.stringify({
+                "authenticUserId": authentic,
+                "imposterUserId": imposter,
+                "word": word 
+            }), 
+            contentType: "application/json",
+            success: function(data) {
+                var authenticCovariance = data.authentic.covarianceMatrixInverse,
+                    authenticVectors = data.authentic.timingVectors,
+                    trainingVectors = localStorage.getItem(word)
+                    imposterVectors = data.imposter.timingVectors;
+
+
+                var eer = equalErrorRateNN(authenticCovariance, trainingVectors, authenticVectors, imposterVectors);
+                var zmfar = zeroMissFalseAlarmRate(authenticCovariance, trainingVectors, authenticVectors, imposterVectors);
+
+                console.log("EER", eer, "ZeroMissFAR", zmfar);
+
+            }
+        });  
+    });
 });

@@ -11,13 +11,17 @@ function findRanges(vectorArray) {
         max = _.reduce(vectorArray, function(memo, v) {
             return v[i] > memo ? v[i] : memo;
         }, 0);
-        ranges[i] = max - min;
+        ranges[i] = max - min;  //explicit conversion to a number
     }
     return ranges;
 }
 
 function getSortedNeighborDistances(sampleVector, vectorArray, covarianceMatrixInverse) {
     // Finds both Euclidean and Mahalanobis distance between the sampleVector and all the training vectors in vectorArray
+    sampleVector = sampleVector.map(Number);
+    vectorArray = JSON.parse(vectorArray);
+    covarianceMatrixInverse = covarianceMatrixInverse.map(function(a) { return a.map(Number)});
+
     var ranges = findRanges(vectorArray);
     var distances = new Array(vectorArray.length);
 
