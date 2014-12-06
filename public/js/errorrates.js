@@ -11,14 +11,16 @@ function equalErrorRateNN(covarianceMatrixInverse, trainingVectors, authenticVec
         threshold;
 
     var authenticDistances = _.map(authenticVectors, function(a) {
-        return _.first(getSortedNeighborDistances(a, trainingVectors, covarianceMatrixInverse)).mahal;
+        var distances = getSortedNeighborDistances(a, trainingVectors, covarianceMatrixInverse);
+        console.log(_.map(distances, function(d){ return d.mahal}));
+        return distances[5].mahal;// getSortedNeighborDistances(a, trainingVectors, covarianceMatrixInverse)[5].mahal;
     });
-    console.log('auth', authenticDistances);
+    console.log('authentic distances', authenticDistances);
 
     var imposterDistances = _.map(imposterVectors, function(p) {
-        return _.first(getSortedNeighborDistances(p, trainingVectors, covarianceMatrixInverse)).mahal;
+        return getSortedNeighborDistances(p, trainingVectors, covarianceMatrixInverse)[5].mahal;
     });
-    console.log('imposter', imposterDistances);
+    console.log('imposter distances', imposterDistances);
 
     for (var i = 1; i < 10000; i++) {
         // when FAR = FRR, we've got the right threshold.
@@ -58,11 +60,11 @@ function zeroMissFalseAlarmRate(covarianceMatrixInverse, trainingVectors, authen
         threshold;
 
     var authenticDistances = _.map(authenticVectors, function(a) {
-        return _.first(getSortedNeighborDistances(a, trainingVectors, covarianceMatrixInverse)).mahal;
+        return getSortedNeighborDistances(a, trainingVectors, covarianceMatrixInverse)[5].mahal;
     });
 
     var imposterDistances = _.map(imposterVectors, function(p) {
-        return _.first(getSortedNeighborDistances(p, trainingVectors, covarianceMatrixInverse)).mahal;
+        return getSortedNeighborDistances(p, trainingVectors, covarianceMatrixInverse)[5].mahal;
     });
 
     for (var i = 10000; i > 1; i--) {

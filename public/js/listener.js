@@ -157,9 +157,9 @@ $(document).ready(function() {
 
                     var nn = _.first(neighborDistances).mahal;
                     
-                    console.log("The threshold", threshold, "nn is", _.first(neighborDistances).mahal); 
+                    console.log("The threshold", threshold/1.9, "nn is", nn); 
 
-                    if (nn > threshold) {
+                    if (nn > threshold/1.9) {
                         alert("Not your normal self?" + nn);
                     }
                 }
@@ -214,10 +214,10 @@ $(document).ready(function() {
         var vec =  _.flatten(_.map(keyArray, function(key, i) {
             var flightTime = (i > 0) ? keyArray[i - 1].uptime - key.downtime : 0;
             if (i === 0) {
-                return [key.uptime - key.downtime]
+                return [key.uptime - key.downtime]; // hold time
             }
             if (key.uptime === null) {
-                key.uptime = keyArray[i -1].uptime; // it's possible to release two keys at once and fail to register up
+                key.uptime = keyArray[i -1].uptime; // it's possible to release two keys at once and fail to register up on one
             }
             return [flightTime, key.uptime - key.downtime]
         }));

@@ -33,11 +33,18 @@ function classifyVector(mahalanobisDistance, threshold) {
 
 function mahalDistNormalized(covarianceMatrixInverse, ranges, meanVector, testVector) {
     // same as mahalDist, but normalize the values of the timing data to be between -1 and 1 when computing distance
-    var differenceTranspose = [normalizedDifference(testVector, meanVector, ranges)], // need a columnar matrix 
-        differenceVector = transpose(differenceTranspose); // need a row matrix
+    var differenceTranspose = [normalizedDifference(testVector, meanVector, ranges)]; // need a columnar matrix 
+        differenceTranspose[0] = _.map(differenceTranspose[0], function(v, i) {
+            if (i % 2 === 0) {
+                return v * 5;
+            }
+            return v;
+        });
+    var differenceVector = transpose(differenceTranspose); // need a row matrix
 
     var mahalanobisDistanceSquared = multiplyMatrices(multiplyMatrices(differenceTranspose, covarianceMatrixInverse), differenceVector);
-    return Math.sqrt(mahalanobisDistanceSquared[0][0]);} // result is a one-item two dimensional array
+    return Math.sqrt(mahalanobisDistanceSquared[0][0]); // result is a one-item two dimensional array
+}
 
 function classifyVector(mahalanobisDistance, threshold) {
     return mahalanobisDistance <= 10 * threshold.range + threshold.max; 

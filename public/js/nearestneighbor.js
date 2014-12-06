@@ -19,7 +19,12 @@ function findRanges(vectorArray) {
 function getSortedNeighborDistances(sampleVector, vectorArray, covarianceMatrixInverse) {
     // Finds both Euclidean and Mahalanobis distance between the sampleVector and all the training vectors in vectorArray
     sampleVector = sampleVector.map(Number);
-    vectorArray = JSON.parse(vectorArray);
+    try {
+        vectorArray = JSON.parse(vectorArray);
+    }
+    catch(ex) {
+        vectorArray = vectorArray;
+    }
     covarianceMatrixInverse = covarianceMatrixInverse.map(function(a) { return a.map(Number)});
 
     var ranges = findRanges(vectorArray);
@@ -46,7 +51,7 @@ function getSortedNeighborDistances(sampleVector, vectorArray, covarianceMatrixI
 }
 
 
-function calculateThresholdNN(vectorArray, covarianceMatrixInverse, toleranceFactor) {
+function calculateThresholdNN(vectorArray, covarianceMatrixInverse) {
     var maxDist = 0;
     var localMax;
     var array;
@@ -58,5 +63,6 @@ function calculateThresholdNN(vectorArray, covarianceMatrixInverse, toleranceFac
             maxDist = localMax;
         }
     }
-    return maxDist * toleranceFactor;
+    return maxDist * 1.1;
 }
+
