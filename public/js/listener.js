@@ -69,6 +69,7 @@ $(document).ready(function() {
 
             if (vectorArray.length === 20) {
                 if (!localStorage.getItem(theWord + "CovarianceMatrixInverse")) {
+                    console.log("BLAH");
                     // We have just enough data to establish a covariance matrix and mean vector
                     covariance = createCovarianceMatrixInverse(vectorArray);
                     mean = getMeanVector(vectorArray);
@@ -84,7 +85,8 @@ $(document).ready(function() {
                         data: {
                             "userId": $('#user').val(),
                             "word": theWord,
-                            "covarianceMatrixInverse": covariance
+                            "covarianceMatrixInverse": covariance,
+                            "trainingVectors": vectorArray
                         }, 
                         success: function() {
                             //noop
@@ -160,7 +162,7 @@ $(document).ready(function() {
                     console.log("The threshold", threshold/1.9, "nn is", nn); 
 
                     if (nn > threshold/1.9) {
-                        alert("Not your normal self?" + nn);
+                        //alert("Not your normal self?" + nn);
                     }
                 }
             }
@@ -247,15 +249,17 @@ $(document).ready(function() {
             success: function(data) {
                 var authenticCovariance = data.authentic.covarianceMatrixInverse,
                     authenticVectors = data.authentic.timingVectors,
-                    trainingVectors = localStorage.getItem(word)
+                    trainingVectors = data.authentic.trainingVectors, 
                     imposterVectors = data.imposter.timingVectors;
 
-
-                var eer = equalErrorRateNN(authenticCovariance, trainingVectors, authenticVectors, imposterVectors);
-                var zmfar = zeroMissFalseAlarmRate(authenticCovariance, trainingVectors, authenticVectors, imposterVectors);
-
-                console.log("EER", eer, "ZeroMissFAR", zmfar);
-
+                var errorRates = getErrorRates(authenticCovariance, trainingVectors, authenticVectors, imposterVectors);
+                
+                var snippet = '<tr><td>Classifier</td><td>EER</td><td>ZMFAR</td></tr>'
+                var temp = _.template('<% _.each(obj, function(o, k) { console.log(o)%>' + 
+                    "<tr><td><%- k %></td><td><%- o.eer %></td><td><%- o.zmfar %><td></td></tr>" + 
+                    '<% }); %>');
+                snippet += temp(errorRates);
+                $('#results').html(snippet);
             }
         });  
     });

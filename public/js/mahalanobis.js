@@ -16,7 +16,6 @@ function createCovarianceMatrixInverse(timingVectorMatrix) {
     return matrix_invert(S);
 }
 
-
 function mahalDist(covarianceMatrixInverse, meanVector, testVector) {
     // mahalDist = sqrt (Transpose(testVector - meanVector) * Inverse Covariance * (sampleVector - Mean Vector))
     // We need a columnar matrix for the "transpose difference" (left) matrix,
@@ -31,12 +30,20 @@ function classifyVector(mahalanobisDistance, threshold) {
     return mahalanobisDistance <= 10 * threshold.range + threshold.max; 
 }
 
-function mahalDistNormalized(covarianceMatrixInverse, ranges, meanVector, testVector) {
+function mahalDistNormalized(covarianceMatrixInverse, ranges, meanVector, testVector, holdOrFlight, weight) {
     // same as mahalDist, but normalize the values of the timing data to be between -1 and 1 when computing distance
+    // if you want weighting for hold times, pass holdOrFlight = 'hold'
+    // for flight, pass 'flight'
+    var indexes;
+    if (holdOrFlight) {
+        indexes = holdOrFlight === 'hold' ? 0 : 1;
+    }
+    weight = weight || 1;
+
     var differenceTranspose = [normalizedDifference(testVector, meanVector, ranges)]; // need a columnar matrix 
         differenceTranspose[0] = _.map(differenceTranspose[0], function(v, i) {
-            if (i % 2 === 0) {
-                return v * 5;
+            if (holdOrFlight && (i % 2 === indexes)) {
+                return v * weight;             
             }
             return v;
         });

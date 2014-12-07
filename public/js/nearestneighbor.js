@@ -35,12 +35,18 @@ function getSortedNeighborDistances(sampleVector, vectorArray, covarianceMatrixI
         for (var featureIndex = 0; featureIndex < ranges.length; featureIndex++) {
             // euclidean distance
             var delta = vectorArray[vectorIndex][featureIndex] - sampleVector[featureIndex];
+            if (featureIndex % 2 === 1) {
+                delta = delta * 5; // for mobile use * 5
+            }
             delta = Math.pow(delta / ranges[featureIndex], 2); // normalize
             sum += delta;
         }
         distances[vectorIndex] = { 
             euc: Math.sqrt(sum),
-            mahal : mahalDistNormalized(covarianceMatrixInverse, ranges, vectorArray[vectorIndex], sampleVector)
+            mahal : mahalDist(covarianceMatrixInverse, vectorArray[vectorIndex], sampleVector),
+            mahalNormalized : mahalDistNormalized(covarianceMatrixInverse, ranges, vectorArray[vectorIndex], sampleVector),
+            mahalNormalizedHold : mahalDistNormalized(covarianceMatrixInverse, ranges, vectorArray[vectorIndex], sampleVector, 'hold', 5),
+            mahalNormalizedFlight : mahalDistNormalized(covarianceMatrixInverse, ranges, vectorArray[vectorIndex], sampleVector, 'flight', 5)
         };
     }
 
