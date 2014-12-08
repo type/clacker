@@ -1,7 +1,8 @@
 function getErrorRates(covarianceMatrixInverse, trainingVectors, authenticVectors, imposterVectors) {
-     var authenticDistances = _.map(authenticVectors, function(a) {
+    var authenticDistances = _.map(authenticVectors, function(a) {
         return getSortedNeighborDistances(a, trainingVectors, covarianceMatrixInverse)[3];
     });
+
 
     var imposterDistances = _.map(imposterVectors, function(p) {
         return getSortedNeighborDistances(p, trainingVectors, covarianceMatrixInverse)[3];
@@ -17,7 +18,6 @@ function getErrorRates(covarianceMatrixInverse, trainingVectors, authenticVector
             eer: undefined,
             zmfar: undefined
         }
-
         var thresholdEE,
             thresholdZM;
         var authenticRejections = 0;
@@ -41,8 +41,9 @@ function getErrorRates(covarianceMatrixInverse, trainingVectors, authenticVector
                 }
             }
 
-            // Allow +/- 1% buffer 
-            if (_.contains([ -1, 0, 1], authenticRejections - falseAcceptances) ) {
+            if (_.contains([ 0], authenticRejections - falseAcceptances) ) {
+            //if (_.contains([ -1, 0, 1], authenticRejections - falseAcceptances) ) {
+                // Switch line comment to allow +/- 1% buffer for weird edge cases
                 result[type].eer = authenticRejections/authenticVectors.length;
                 break;
             }

@@ -42,11 +42,11 @@ function getSortedNeighborDistances(sampleVector, vectorArray, covarianceMatrixI
             sum += delta;
         }
         distances[vectorIndex] = { 
-            euc: Math.sqrt(sum),
-            mahal : mahalDist(covarianceMatrixInverse, vectorArray[vectorIndex], sampleVector),
-            mahalNormalized : mahalDistNormalized(covarianceMatrixInverse, ranges, vectorArray[vectorIndex], sampleVector),
-            mahalNormalizedHold : mahalDistNormalized(covarianceMatrixInverse, ranges, vectorArray[vectorIndex], sampleVector, 'hold', 5),
-            mahalNormalizedFlight : mahalDistNormalized(covarianceMatrixInverse, ranges, vectorArray[vectorIndex], sampleVector, 'flight', 5)
+            nnEuc: Math.sqrt(sum),
+            nnMahal : mahalDist(covarianceMatrixInverse, vectorArray[vectorIndex], sampleVector),
+            nnMahalNormalized : mahalDistNormalized(covarianceMatrixInverse, ranges, vectorArray[vectorIndex], sampleVector),
+            nnMahalNormalizedHold : mahalDistNormalized(covarianceMatrixInverse, ranges, vectorArray[vectorIndex], sampleVector, 'hold', 5),
+            nnMahalNormalizedFlight : mahalDistNormalized(covarianceMatrixInverse, ranges, vectorArray[vectorIndex], sampleVector, 'flight', 5)
         };
     }
 
