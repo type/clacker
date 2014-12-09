@@ -142,9 +142,11 @@ function matrix_invert(M){
 
 function meanVector(matrix) {
     var mean = _.map(matrix, function(row) {
-        return (_.reduce(row, function(memo, num) {
-            return memo + num;
-        }, 0))/row.length;
+        var sum = 0;
+        _.each(row, function(i) {
+            sum += parseInt(i, 10);
+        });
+        return sum/row.length;
     });
     return mean;
 }

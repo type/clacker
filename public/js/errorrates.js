@@ -45,6 +45,7 @@ function getErrorRates(covarianceMatrixInverse, trainingVectors, authenticVector
             //if (_.contains([ -1, 0, 1], authenticRejections - falseAcceptances) ) {
                 // Switch line comment to allow +/- 1% buffer for weird edge cases
                 result[type].eer = authenticRejections/authenticVectors.length;
+                result[type].ethreshold = thresholdEE;
                 break;
             }
         }
@@ -69,6 +70,7 @@ function getErrorRates(covarianceMatrixInverse, trainingVectors, authenticVector
             }
             if (falseAcceptances === 0) {
                 result[type].zmfar = authenticRejections/authenticVectors.length;
+                result[type].zthreshold = thresholdZM;
                 break;
             }
         }

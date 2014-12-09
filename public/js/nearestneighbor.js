@@ -30,23 +30,39 @@ function getSortedNeighborDistances(sampleVector, vectorArray, covarianceMatrixI
     var ranges = findRanges(vectorArray);
     var distances = new Array(vectorArray.length);
 
+    var mean = getMeanVector(vectorArray);
+
     for (var vectorIndex in vectorArray) {
-        var sum = 0;
+        var sumNorm = 0;
+        var sumHold = 0;
+        var sumFlight = 0;
         for (var featureIndex = 0; featureIndex < ranges.length; featureIndex++) {
             // euclidean distance
-            var delta = vectorArray[vectorIndex][featureIndex] - sampleVector[featureIndex];
+            var delta, deltaHold, deltaFlight;
+            delta = vectorArray[vectorIndex][featureIndex] - sampleVector[featureIndex];
             if (featureIndex % 2 === 1) {
-                delta = delta * 5; // for mobile use * 5
+                deltaFlight = delta * 5; 
+            }
+            else {
+                deltaHold = delta * 5;
             }
             delta = Math.pow(delta / ranges[featureIndex], 2); // normalize
-            sum += delta;
+            deltaHold = Math.pow(deltaHold / ranges[featureIndex], 2); // normalize
+            deltaFlight = Math.pow(deltaFlight / ranges[featureIndex], 2); // normalize
+            sumNorm += delta;
+            sumHold += deltaHold;
+            sumFlight += deltaFlight;
         }
         distances[vectorIndex] = { 
-            nnEuc: Math.sqrt(sum),
+            nnEuc: Math.sqrt(sumNorm),
+            nnEucHold: Math.sqrt(sumHold),
+            nnEucFlight: Math.sqrt(sumFlight),
             nnMahal : mahalDist(covarianceMatrixInverse, vectorArray[vectorIndex], sampleVector),
             nnMahalNormalized : mahalDistNormalized(covarianceMatrixInverse, ranges, vectorArray[vectorIndex], sampleVector),
             nnMahalNormalizedHold : mahalDistNormalized(covarianceMatrixInverse, ranges, vectorArray[vectorIndex], sampleVector, 'hold', 5),
-            nnMahalNormalizedFlight : mahalDistNormalized(covarianceMatrixInverse, ranges, vectorArray[vectorIndex], sampleVector, 'flight', 5)
+            nnMahalNormalizedFlight : mahalDistNormalized(covarianceMatrixInverse, ranges, vectorArray[vectorIndex], sampleVector, 'flight', 5),
+            euc: euclideanDistance(mean, vectorArray[vectorIndex]),
+            manhattan: manhattanDistance(mean, vectorArray[vectorIndex])
         };
     }
 
